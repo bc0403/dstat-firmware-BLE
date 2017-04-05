@@ -1,0 +1,70 @@
+DStat communications protocol
+
+Initialization (can be done again even after initialized, if needed):
+	Send 'C'
+	Reply '#'
+	Send 'k'
+
+Command protocol:
+	Send '!' - Other characters sent first will be rejected with reply 'C\r\n'
+	Send command and arguments (see below)
+	Lines replied starting with '#' are human-readable info messages that should be logged
+	All commands terminate by replying "no\n\r"
+	
+Commands - single letter command with arguments in C scanf format :
+	ADC setting
+		Send 'A'
+		Send "%hhx%hhx%hhx" - ADS Buffer/Rate/PGA value
+	
+	Gain setting
+		Send 'G'
+		Send "%u" - gain value
+	
+	Linear Sweep Voltammetry
+		Send 'L'
+		Send "%u%u%i%i%i%i%u" - t_preconditioning1, t_preconditioning2, v_preconditioning1,
+			 					v_preconditioning2, start, stop, slope
+		Replies continuously with data after preconditioning time:
+			Each point:
+				"B\n" followed by uint16 voltage and int32 current, then "\n"
+	
+	Cyclic Voltammetry
+		Send 'C'
+		Send "%u%u%i%i%i%i%i%hhu%u" - t_preconditioning1, t_preconditioning2,
+ 									v_preconditioning1, v_preconditioning2, v1, v2, start,
+									number of scans, slope
+		Replies continuously with data after preconditioning time:
+			Each point:
+				"B\n" followed by uint16 voltage and int32 current, then "\n"
+			End of each scan:
+				"S\n\r"
+			End of experiment:
+				"D\n\r"
+				
+	Square Wave Voltammetry
+		Send 'S'
+		Send "%u%u%i%i%i%i%u%u%u%u" - t_preconditioning1, t_preconditioning2,
+ 									v_preconditioning1, v_preconditioning2, start, stop,
+									step size, pulse_height, frequency, scans
+		Replies continuously with data after preconditioning time:
+			Each point:
+				"B\n" followed by uint16 voltage, int32 forward_current,
+				int32 reverse_current, then "\n"
+			End of each scan:
+				"S\n\r"
+			End of experiment:
+				"D\n\r"
+
+	Differential Pulse Voltammetry
+		Send 'S'
+		Send "%u%u%i%i%i%i%u%u%u%u" - t_preconditioning1, t_preconditioning2,
+ 									v_preconditioning1, v_preconditioning2, start, stop,
+									step size, pulse_height, period, width
+		Replies continuously with data after preconditioning time:
+			Each point:
+				"B\n" followed by uint16 voltage, int32 forward_current,
+				int32 reverse_current, then "\n"
+			End of each scan:
+				"S\n\r"
+			End of experiment:
+				"D\n\r"
