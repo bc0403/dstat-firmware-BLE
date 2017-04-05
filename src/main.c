@@ -58,6 +58,7 @@
  *  Author: mdryden
  */
 
+
 #include "experiment.h"
 #include "asf.h"
 #include "settings.h"
@@ -68,26 +69,28 @@
 #include <stdint.h>
 #include "conf_board.h"
 
-// //--- usartC0 polling
-// #include <avr/io.h>
-// #include "usartC0.h"
-//
-// volatile unsigned char c;
-// //---
-
-//--- usartC0 interrupt
+//--- usartC0 polling
 #include <avr/io.h>
-#include <avr/interrupt.h>
-#include "usartC0.h"
+#include <stdio.h>
+#include "usartC0.h" /* in usartC0.h, set USBFLAG for usb or BLE connections */
+
+//volatile unsigned char c;
+//---
+//
+// //--- usartC0 interrupt
+// #include <avr/io.h>
+// //#include <avr/interrupt.h>
+// #include "usartC0.h"
 
 volatile unsigned char c;
-
-ISR(USARTC0_RXC_vect)
-{
-	  c = usartRx();
-    usartTx(c);
-  //usartTx('B');
-}
+//
+// ISR(USARTC0_RXC_vect)
+// {
+// 	  c = usartRx();
+//     //usartTx(c);
+// 	  //printf("hi!\n");
+//   //usartTx('B');
+// }
 //---
 
 //Internal function declarations
@@ -141,15 +144,20 @@ int8_t command_handler(char command){
 }
 
 int main(void){
-  // //--- usartC0 poll
-  // usartInit();
-  // //---
+  //--- usartC0 poll
+	  usartInit();
+		usartFlush();
+  //---
 
   //---usartC0 interrupt
-  usartInit();
-  usartFlush();
-  usartInterruptInit();
-  //---
+	// if (stdioFlag  == 'A')
+	// {
+	//   usartInit();
+	// }
+
+  // usartFlush();
+  // usartInterruptInit();
+  // //---
 
   irq_initialize_vectors();
   cpu_irq_enable();
@@ -167,7 +175,7 @@ int main(void){
   sysclk_enable_peripheral_clock(&USARTC0); //enable clocks for usartC0
   //---
 	rtc_init();
-    sleepmgr_init();
+  sleepmgr_init();
 	sysclk_enable_module(SYSCLK_PORT_GEN, SYSCLK_EVSYS);
 
 	pmic_set_scheduling(PMIC_SCH_ROUND_ROBIN);
@@ -192,6 +200,10 @@ int main(void){
 
   autogain_enable = 0;
   g_gain = POT_GAIN_30k;
+  printf("Welcome!\r\n");
+	//printf("%c",stdioFlag);
+	printf("===\r\n");
+
   pot_set_gain();
 
   settings_read_eeprom();
@@ -217,13 +229,14 @@ int main(void){
         #endif
 		command_handler(getchar());
 	goto program_loop;
-  // //--- usartC0 poll
+  //--- usartC0 poll
+	// printf("welcome!\n");
   // while (1){
   //   c = usartRx();
   //   usartTx(c);
   // }
-  // //---
-  // //--- usartC0 interrupt
+  //---
+  //--- usartC0 interrupt
   // while (1){
   //   // c = usartRx();
   //   // usartTx(c);
